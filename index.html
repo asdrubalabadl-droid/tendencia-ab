@@ -512,4 +512,518 @@ function exportarInv(){
 }
 </script>
 </body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tendencia AB — Gestión</title>
+<style>
+  :root {
+    --pink:#C2185B; --pink-med:#E91E63; --pink-light:#FCE4EC; --pink-soft:#F8BBD9;
+    --teal:#00695C; --teal-light:#E0F2F1;
+    --blue:#1565C0; --blue-light:#E3F2FD;
+    --green:#2E7D32; --green-light:#E8F5E9;
+    --gold:#F57F17; --gold-light:#FFF9C4;
+    --red:#B71C1C; --red-light:#FFEBEE;
+    --purple:#6A1B9A; --purple-light:#F3E5F5;
+    --gray-dark:#212121; --gray-mid:#616161; --gray-light:#F5F5F5; --gray-line:#E0E0E0;
+    --white:#FFFFFF; --bg:#F8F4F6; --radius:10px; --radius-lg:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--gray-dark);min-height:100vh}
+  header{background:var(--pink);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(194,24,91,.25)}
+  .logo-name{font-size:22px;font-weight:700;color:#fff;letter-spacing:1px}
+  .logo-sub{font-size:11px;color:var(--pink-soft);letter-spacing:2.5px;text-transform:uppercase}
+  .bcv-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:24px;padding:6px 14px;display:flex;align-items:center;gap:8px;cursor:pointer}
+  .bcv-badge:hover{background:rgba(255,255,255,.22)}
+  .bcv-badge span{font-size:13px;color:#fff}
+  .bcv-badge .rate{font-size:16px;font-weight:700;color:#fff}
+  .dot{width:8px;height:8px;border-radius:50%;background:#A5D6A7;flex-shrink:0}
+  .dot.loading{background:#FFE082;animation:blink 1s infinite}
+  .dot.err{background:#EF9A9A}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .nav{display:flex;gap:4px;padding:14px 24px 0;background:var(--pink);flex-wrap:wrap}
+  .nav-btn{padding:9px 22px;font-size:14px;font-weight:600;cursor:pointer;border:none;border-radius:10px 10px 0 0;background:rgba(255,255,255,.15);color:#fff;transition:background .2s}
+  .nav-btn.active{background:var(--bg);color:var(--pink)}
+  .nav-btn:hover:not(.active){background:rgba(255,255,255,.25)}
+  .container{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+  .page{display:none}
+  .page.active{display:block}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+  .stat{background:var(--white);border-radius:var(--radius);padding:14px 16px;border:1px solid var(--gray-line)}
+  .stat .sl{font-size:11px;color:var(--gray-mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  .stat .sv{font-size:22px;font-weight:700;color:var(--gray-dark)}
+  .card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-line);padding:20px;margin-bottom:16px}
+  .sec-title{font-size:15px;font-weight:600;color:var(--gray-dark);margin-bottom:14px}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+  .fld label{display:block;font-size:12px;color:var(--gray-mid);margin-bottom:5px;font-weight:500}
+  input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--gray-line);border-radius:var(--radius);font-size:14px;color:var(--gray-dark);background:var(--white);outline:none;transition:border .2s;font-family:inherit}
+  input:focus,select:focus,textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(194,24,91,.1)}
+  input[readonly]{background:var(--gray-light);cursor:default}
+  textarea{resize:vertical;min-height:70px}
+  .alert-msg{display:none;margin-top:5px;padding:7px 11px;border-radius:var(--radius);font-size:12px;font-weight:600}
+  .alert-msg.red{background:var(--red-light);border:1px solid #EF9A9A;color:var(--red)}
+  .alert-msg.green{color:var(--green)}
+  .alert-msg.gold{color:var(--gold)}
+  .alert-msg.show{display:block}
+  .tasa-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap}
+  .tasa-row .fld{flex:1;min-width:160px}
+  .btn-upd{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:var(--radius);border:1px solid var(--pink);background:transparent;color:var(--pink);font-weight:500;white-space:nowrap}
+  .btn-upd:hover{background:var(--pink-light)}
+  .btn-reg{width:100%;padding:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:var(--radius);margin-top:6px;letter-spacing:.5px;transition:background .2s}
+  .btn-reg.pink{background:var(--pink);color:#fff}
+  .btn-reg.pink:hover{background:#AD1457}
+  .btn-reg.purple{background:var(--purple);color:#fff}
+  .btn-reg.purple:hover{background:#4A148C}
+  .btn-reg:disabled{background:#ccc;cursor:not-allowed}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:6px 16px;font-size:13px;cursor:pointer;border-radius:24px;border:1px solid var(--gray-line);background:transparent;color:var(--gray-mid);transition:all .2s}
+  .tab.active{background:var(--pink);color:#fff;border-color:var(--pink);font-weight:600}
+  .tab.inv.active{background:var(--purple);border-color:var(--purple)}
+  .tab.flag-dup{border-color:var(--red);color:var(--red)}
+  .tab.flag-dup.active{background:var(--red);color:#fff}
+  .tab.flag-low{border-color:var(--gold);color:var(--gold)}
+  .tab.flag-low.active{background:var(--gold);color:#fff}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+  .search-wrap{display:flex;gap:8px;flex-wrap:wrap}
+  .search-wrap input{width:200px}
+  .btn-exp{padding:8px 14px;font-size:13px;cursor:pointer;border-radius:var(--radius);border:1px solid var(--gray-line);background:var(--gray-light);color:var(--gray-dark)}
+  .btn-exp:hover{background:var(--gray-line)}
+  .tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--gray-line)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{background:var(--gray-light);padding:10px 12px;font-size:11px;font-weight:600;color:var(--gray-mid);text-align:left;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--gray-line);white-space:nowrap}
+  tbody td{padding:10px 12px;border-bottom:1px solid #F5F5F5;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:#FFF5F8}
+  tbody tr.warn-row td{background:#FFFDE7}
+  .empty-row td{text-align:center;padding:2rem;color:var(--gray-mid);font-size:14px}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .bt{background:var(--blue-light);color:var(--blue)}
+  .bm{background:var(--green-light);color:var(--green)}
+  .b-dup{background:var(--red-light);color:var(--red);font-size:10px;padding:2px 7px}
+  .b-conf{background:var(--green-light);color:var(--green)}
+  .b-pend{background:var(--gold-light);color:var(--gold)}
+  .b-rech{background:var(--red-light);color:var(--red)}
+  .b-cosm{background:#F3E5F5;color:#6A1B9A}
+  .b-lenc{background:#FCE4EC;color:#C2185B}
+  .b-acc{background:#E8F5E9;color:#2E7D32}
+  .b-perf{background:#E3F2FD;color:#1565C0}
+  .b-otro{background:#F5F5F5;color:#616161}
+  .b-ok{background:var(--green-light);color:var(--green)}
+  .b-low{background:var(--gold-light);color:var(--gold)}
+  .b-out{background:var(--red-light);color:var(--red)}
+  .ref-cell{font-family:'Courier New',monospace;font-size:12px}
+  .del-btn{background:none;border:none;cursor:pointer;color:var(--gray-mid);font-size:16px;padding:4px 8px;border-radius:6px}
+  .del-btn:hover{background:var(--red-light);color:var(--red)}
+  .precio-prev{background:var(--purple-light);border:1px solid #CE93D8;border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:none;gap:20px;flex-wrap:wrap;align-items:center}
+  .precio-prev span{font-size:13px;color:var(--purple)}
+  .precio-prev strong{font-size:16px;font-weight:700}
+  .res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+  .res-card{border:1px solid var(--gray-line);border-radius:var(--radius);padding:14px;background:var(--bg)}
+  .res-date{font-size:13px;font-weight:700;color:var(--pink);margin-bottom:8px}
+  .res-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-mid);margin-bottom:4px}
+  .res-row span:last-child{font-weight:600;color:var(--gray-dark)}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+  .overlay.show{display:flex}
+  .modal{background:var(--white);border-radius:var(--radius-lg);padding:28px;max-width:400px;width:100%;animation:popIn .2s ease}
+  @keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal h3{font-size:17px;font-weight:700;color:var(--red);margin-bottom:8px}
+  .modal p{font-size:14px;color:var(--gray-mid);line-height:1.6;margin-bottom:20px}
+  .modal-ref{font-family:monospace;background:var(--red-light);color:var(--red);padding:4px 8px;border-radius:6px;font-size:13px;font-weight:700}
+  .modal-btns{display:flex;justify-content:flex-end}
+  .modal .btn-ok{padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;border-radius:var(--radius);background:var(--pink);color:#fff;border:none}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s;z-index:300}
+  .toast.show{opacity:1}
+  footer{text-align:center;padding:20px;font-size:12px;color:var(--gray-mid);border-top:1px solid var(--gray-line);margin-top:8px}
+  @media(max-width:600px){
+    .nav{padding:10px 10px 0}
+    .nav-btn{padding:7px 14px;font-size:12px}
+    .stats{grid-template-columns:repeat(3,1fr);gap:8px}
+    .stat .sv{font-size:16px}
+    .container{padding:12px 8px 40px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-name">Tendencia AB</div>
+    <div class="logo-sub">Cosméticos &amp; Lencería</div>
+  </div>
+  <div class="bcv-badge" onclick="fetchBCV(true)">
+    <div class="dot loading" id="dot"></div>
+    <span>BCV:</span>
+    <span class="rate" id="bcv-rate">--</span>
+    <span id="bcv-fecha" style="font-size:11px;color:var(--pink-soft)"></span>
+  </div>
+</header>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('pagos',this)">&#128179; Pagos</button>
+  <button class="nav-btn" onclick="showPage('inventario',this)">&#128230; Inventario</button>
+</div>
+
+<div class="container">
+
+<!-- PAGOS -->
+<div class="page active" id="page-pagos">
+  <div class="stats">
+    <div class="stat"><div class="sl">Total Bs</div><div class="sv" style="color:var(--pink)" id="s-bs">Bs 0,00</div></div>
+    <div class="stat"><div class="sl">Total USD</div><div class="sv" style="color:var(--blue)" id="s-usd">$ 0.00</div></div>
+    <div class="stat"><div class="sl">Transferencias</div><div class="sv" id="s-tr">0</div></div>
+    <div class="stat"><div class="sl">Pago Móvil</div><div class="sv" id="s-pm">0</div></div>
+    <div class="stat"><div class="sl">Hoy</div><div class="sv" id="s-hoy">0</div></div>
+    <div class="stat"><div class="sl">Pendientes</div><div class="sv" style="color:var(--gold)" id="s-pend">0</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">Registrar pago</div>
+    <div class="tasa-row">
+      <div class="fld"><label>Tasa BCV activa (Bs/$)</label><input type="number" id="f-tasa" placeholder="481.21" step="0.01" min="1" oninput="calcUsd()"></div>
+      <button class="btn-upd" onclick="fetchBCV(true)">&#8635; Actualizar BCV</button>
+    </div>
+    <div class="form-grid">
+      <div class="fld"><label>Tipo</label><select id="f-tipo"><option>Transferencia</option><option>Pago Móvil</option></select></div>
+      <div class="fld"><label>Cliente</label><input type="text" id="f-cliente" placeholder="Nombre del cliente"></div>
+      <div class="fld"><label>Monto Bs</label><input type="number" id="f-monto" placeholder="0.00" step="0.01" min="0" oninput="calcUsd()"></div>
+    </div>
+    <div class="form-grid">
+      <div class="fld">
+        <label>N° de referencia</label>
+        <input type="text" id="f-ref" placeholder="00123456789" oninput="chkDupPago(this.value)" style="font-family:monospace;font-size:13px">
+        <div class="alert-msg red" id="a-dup-pago">&#9940; Referencia ya registrada — pago bloqueado</div>
+        <div class="alert-msg green" id="a-ok-pago">&#10003; Referencia disponible</div>
+      </div>
+      <div class="fld"><label>Banco / Operadora</label><input type="text" id="f-banco" placeholder="Banesco, Movistar..."></div>
+      <div class="fld"><label>Fecha</label><input type="date" id="f-fecha"></div>
+    </div>
+    <div class="form-grid">
+      <div class="fld"><label>Equivalente USD (auto)</label><input type="text" id="f-usd" readonly style="color:var(--blue);font-weight:700"></div>
+      <div class="fld"><label>Estado</label><select id="f-estado"><option>Confirmado</option><option>Pendiente</option><option>Rechazado</option></select></div>
+      <div class="fld"><label>Nota / Producto</label><input type="text" id="f-nota" placeholder="Pedido #12, labial x2..."></div>
+    </div>
+    <button class="btn-reg pink" id="btn-pago" onclick="registrarPago()">+ Registrar pago</button>
+  </div>
+
+  <div class="card">
+    <div class="top-bar">
+      <div class="sec-title" style="margin:0">Historial de pagos</div>
+      <div class="search-wrap">
+        <input type="text" id="buscar-pago" placeholder="Buscar..." oninput="renderPagos()">
+        <button class="btn-exp" onclick="exportarPagos()">&#128190; Exportar</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="setPTab('todos',this)">Todos</button>
+      <button class="tab" onclick="setPTab('Transferencia',this)">Transferencias</button>
+      <button class="tab" onclick="setPTab('Pago Móvil',this)">Pago Móvil</button>
+      <button class="tab" id="tab-dup" onclick="setPTab('dup',this)">Duplicados</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Tipo</th><th>Cliente</th><th>Referencia</th><th>Banco</th><th>Fecha</th><th>Tasa</th><th>Monto Bs</th><th>USD</th><th>Estado</th><th>Nota</th><th></th></tr></thead>
+      <tbody id="tbody-p"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card"><div class="sec-title">Resumen por día</div><div class="res-grid" id="resumen-p"></div></div>
+</div>
+
+<!-- INVENTARIO -->
+<div class="page" id="page-inventario">
+  <div class="stats">
+    <div class="stat"><div class="sl">Productos</div><div class="sv" style="color:var(--purple)" id="i-tot">0</div></div>
+    <div class="stat"><div class="sl">Unidades</div><div class="sv" id="i-uni">0</div></div>
+    <div class="stat"><div class="sl">Valor USD</div><div class="sv" style="color:var(--blue)" id="i-vusd">$ 0.00</div></div>
+    <div class="stat"><div class="sl">Valor Bs</div><div class="sv" style="color:var(--pink)" id="i-vbs">Bs 0</div></div>
+    <div class="stat"><div class="sl">Stock bajo</div><div class="sv" style="color:var(--gold)" id="i-bajo">0</div></div>
+    <div class="stat"><div class="sl">Agotados</div><div class="sv" style="color:var(--red)" id="i-out">0</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">Agregar producto</div>
+    <div class="form-grid">
+      <div class="fld">
+        <label>Código de producto</label>
+        <input type="text" id="i-cod" placeholder="Ej: TAB-001" style="font-family:monospace;text-transform:uppercase" oninput="chkDupCod(this.value)">
+        <div class="alert-msg red" id="a-dup-cod">&#9940; Código ya registrado</div>
+        <div class="alert-msg green" id="a-ok-cod">&#10003; Código disponible</div>
+      </div>
+      <div class="fld"><label>Nombre del producto</label><input type="text" id="i-nom" placeholder="Ej: Labial Mate Rojo"></div>
+      <div class="fld"><label>Categoría</label>
+        <select id="i-cat">
+          <option>Cosmético</option><option>Lencería</option><option>Accesorio</option>
+          <option>Perfumería</option><option>Cuidado Personal</option><option>Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="fld"><label>Precio en USD ($)</label><input type="number" id="i-pusd" placeholder="0.00" step="0.01" min="0" oninput="calcBsProd()"></div>
+      <div class="fld"><label>Precio en Bs (auto BCV)</label><input type="text" id="i-pbs" readonly style="color:var(--pink);font-weight:700"></div>
+      <div class="fld">
+        <label>Cantidad en stock</label>
+        <input type="number" id="i-qty" placeholder="0" min="0" step="1" oninput="chkStock()">
+        <div class="alert-msg gold" id="a-stock">&#9888; Stock bajo (menos del mínimo)</div>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="fld"><label>Stock mínimo (alerta)</label><input type="number" id="i-min" placeholder="5" min="1" value="5"></div>
+      <div class="fld"><label>Proveedor</label><input type="text" id="i-prov" placeholder="Distribuidora X"></div>
+      <div class="fld"><label>Fecha de ingreso</label><input type="date" id="i-fecha"></div>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="fld"><label>Características / Descripción</label><textarea id="i-desc" placeholder="Color, talla, material, referencia de fábrica, notas..."></textarea></div>
+    </div>
+    <div class="precio-prev" id="prev-box">
+      <span>Precio USD: <strong id="prev-usd">$ 0.00</strong></span>
+      <span style="color:#CE93D8">|</span>
+      <span>Precio Bs (tasa <span id="prev-tasa">--</span>): <strong id="prev-bs">Bs 0</strong></span>
+    </div>
+    <button class="btn-reg purple" id="btn-inv" onclick="agregarProd()">+ Agregar producto</button>
+  </div>
+
+  <div class="card">
+    <div class="top-bar">
+      <div class="sec-title" style="margin:0">Catálogo de productos</div>
+      <div class="search-wrap">
+        <input type="text" id="buscar-inv" placeholder="Buscar código o nombre..." oninput="renderInv()">
+        <button class="btn-exp" onclick="exportarInv()">&#128190; Exportar</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab inv active" onclick="setITab('todos',this)">Todos</button>
+      <button class="tab inv" onclick="setITab('Cosmético',this)">Cosméticos</button>
+      <button class="tab inv" onclick="setITab('Lencería',this)">Lencería</button>
+      <button class="tab inv" onclick="setITab('Perfumería',this)">Perfumería</button>
+      <button class="tab inv" onclick="setITab('Accesorio',this)">Accesorios</button>
+      <button class="tab inv" id="tab-low" onclick="setITab('bajo',this)">Stock bajo</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Precio $</th><th>Precio Bs</th><th>Tasa</th><th>Stock</th><th>Mín.</th><th>Estado</th><th>Características</th><th>Proveedor</th><th>Ingreso</th><th></th></tr></thead>
+      <tbody id="tbody-i"></tbody>
+    </table></div>
+  </div>
+</div>
+
+</div>
+<footer>Tendencia AB &copy; 2026 &nbsp;·&nbsp; Pagos e Inventario &nbsp;·&nbsp; Tasa BCV oficial</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div style="font-size:32px;margin-bottom:10px">&#9888;&#65039;</div>
+    <h3 id="m-title">Duplicado</h3>
+    <p id="m-msg"></p>
+    <div class="modal-btns"><button class="btn-ok" onclick="closeModal()">Entendido</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KP='tab_pagos_gh_v1', KI='tab_inv_v1', KB='tab_bcv_gh_v1';
+let pagos=JSON.parse(localStorage.getItem(KP)||'[]');
+let inv=JSON.parse(localStorage.getItem(KI)||'[]');
+let bcvC=JSON.parse(localStorage.getItem(KB)||'{}');
+let pTab='todos', iTab='todos', tasa=null;
+
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-fecha').value=hoy();
+  document.getElementById('i-fecha').value=hoy();
+  renderPagos();statsPagos();resumenP();
+  renderInv();statsInv();
+  fetchBCV(false);
+});
+
+function showPage(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  btn.classList.add('active');
+}
+function hoy(){return new Date().toISOString().split('T')[0]}
+function fmt(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`}
+function fBs(n){return'Bs '+Number(n).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fUsd(n){return'$ '+Number(n).toFixed(2)}
+function toast(msg,ok=true){const e=document.getElementById('toast');e.textContent=msg;e.style.background=ok?'var(--green)':'var(--red)';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
+function closeModal(){document.getElementById('overlay').classList.remove('show')}
+function showModal(title,msg){document.getElementById('m-title').textContent=title;document.getElementById('m-msg').innerHTML=msg;document.getElementById('overlay').classList.add('show')}
+
+async function fetchBCV(force){
+  const h=hoy();
+  document.getElementById('dot').className='dot loading';
+  if(!force&&bcvC[h]){setTasa(bcvC[h],h);return}
+  document.getElementById('bcv-rate').textContent='Consultando...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:'BCV Venezuela official USD exchange rate today. Respond ONLY with JSON no markdown: {"rate":481.21,"date":"2026-04-19"}'}]})});
+    const d=await r.json();
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const p=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    const rate=parseFloat(p.rate);
+    bcvC[p.date||h]=rate;localStorage.setItem(KB,JSON.stringify(bcvC));
+    setTasa(rate,p.date||h);toast('Tasa BCV: '+Number(rate).toFixed(2)+' Bs/$');
+  }catch{document.getElementById('dot').className='dot err';document.getElementById('bcv-rate').textContent='Error';toast('Error al obtener tasa',false)}
+}
+function setTasa(rate,fecha){
+  tasa=rate;
+  document.getElementById('dot').className='dot';
+  document.getElementById('bcv-rate').textContent=Number(rate).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})+' Bs/$';
+  document.getElementById('bcv-fecha').textContent=fmt(fecha);
+  document.getElementById('f-tasa').value=rate;
+  calcUsd();calcBsProd();
+}
+
+/* PAGOS */
+function calcUsd(){const m=parseFloat(document.getElementById('f-monto').value)||0,t=parseFloat(document.getElementById('f-tasa').value)||0;document.getElementById('f-usd').value=(m&&t)?fUsd(m/t):''}
+function chkDupPago(v){
+  v=v.trim();const d=document.getElementById('a-dup-pago'),o=document.getElementById('a-ok-pago'),b=document.getElementById('btn-pago');
+  if(!v){d.classList.remove('show');o.classList.remove('show');b.disabled=false;return}
+  const is=pagos.some(p=>p.ref===v);d.classList.toggle('show',is);o.classList.toggle('show',!is);b.disabled=is;
+}
+function registrarPago(){
+  const tipo=document.getElementById('f-tipo').value,cliente=document.getElementById('f-cliente').value.trim(),
+    monto=parseFloat(document.getElementById('f-monto').value)||0,ref=document.getElementById('f-ref').value.trim(),
+    banco=document.getElementById('f-banco').value.trim(),fecha=document.getElementById('f-fecha').value,
+    t=parseFloat(document.getElementById('f-tasa').value)||0,estado=document.getElementById('f-estado').value,
+    nota=document.getElementById('f-nota').value.trim();
+  if(!ref){toast('Referencia obligatoria',false);return}
+  if(!monto){toast('Ingresa el monto',false);return}
+  if(!t){toast('Ingresa la tasa BCV',false);return}
+  if(pagos.some(p=>p.ref===ref)){const o=pagos.find(p=>p.ref===ref);showModal('Referencia duplicada',`La referencia <span class="modal-ref">${ref}</span> ya fue registrada el <strong>${fmt(o.fecha)}</strong> a nombre de <strong>${o.cliente||'S/N'}</strong>.`);return}
+  pagos.unshift({id:Date.now(),tipo,cliente,monto,ref,banco,fecha,tasa:t,usd:monto/t,estado,nota});
+  localStorage.setItem(KP,JSON.stringify(pagos));
+  ['f-cliente','f-monto','f-ref','f-banco','f-nota','f-usd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-dup-pago').classList.remove('show');document.getElementById('a-ok-pago').classList.remove('show');document.getElementById('btn-pago').disabled=false;
+  renderPagos();statsPagos();resumenP();toast('Pago registrado');
+}
+function elimP(id){if(!confirm('¿Eliminar pago?'))return;pagos=pagos.filter(p=>p.id!==id);localStorage.setItem(KP,JSON.stringify(pagos));renderPagos();statsPagos();resumenP();toast('Eliminado')}
+function setPTab(t,el){pTab=t;document.querySelectorAll('#page-pagos .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderPagos()}
+function renderPagos(){
+  const b=document.getElementById('buscar-pago').value.toLowerCase();
+  const rc={};pagos.forEach(p=>rc[p.ref]=(rc[p.ref]||0)+1);
+  const hd=Object.values(rc).some(v=>v>1);
+  const td=document.getElementById('tab-dup');td.classList.toggle('flag-dup',hd);
+  const items=pagos.filter(p=>{const mt=pTab==='todos'||p.tipo===pTab||(pTab==='dup'&&rc[p.ref]>1);const mb=!b||p.ref.toLowerCase().includes(b)||(p.cliente||'').toLowerCase().includes(b);return mt&&mb});
+  const tb=document.getElementById('tbody-p');
+  if(!items.length){tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin pagos</td></tr>';return}
+  tb.innerHTML=items.map(p=>{const id=rc[p.ref]>1;const be=p.estado==='Confirmado'?'b-conf':p.estado==='Pendiente'?'b-pend':'b-rech';
+    return`<tr${id?' class="warn-row"':''}>
+      <td><span class="badge ${p.tipo==='Transferencia'?'bt':'bm'}">${p.tipo==='Transferencia'?'Transfer.':'Pago Móvil'}</span></td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.cliente||'—'}</td>
+      <td class="ref-cell">${p.ref}${id?'<br><span class="badge b-dup">DUPLICADO</span>':''}</td>
+      <td>${p.banco||'—'}</td><td style="white-space:nowrap">${fmt(p.fecha)}</td>
+      <td style="font-size:12px;color:var(--gray-mid)">${Number(p.tasa).toFixed(2)}</td>
+      <td style="font-weight:700;color:var(--pink)">${fBs(p.monto)}</td>
+      <td style="font-weight:700;color:var(--blue)">${fUsd(p.usd||0)}</td>
+      <td><span class="badge ${be}">${p.estado}</span></td>
+      <td style="font-size:12px;color:var(--gray-mid);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nota||'—'}</td>
+      <td><button class="del-btn" onclick="elimP(${p.id})">&#10005;</button></td>
+    </tr>`}).join('');
+}
+function statsPagos(){
+  const h=hoy();
+  document.getElementById('s-bs').textContent=fBs(pagos.reduce((s,p)=>s+p.monto,0));
+  document.getElementById('s-usd').textContent=fUsd(pagos.reduce((s,p)=>s+(p.usd||0),0));
+  document.getElementById('s-tr').textContent=pagos.filter(p=>p.tipo==='Transferencia').length;
+  document.getElementById('s-pm').textContent=pagos.filter(p=>p.tipo==='Pago Móvil').length;
+  document.getElementById('s-hoy').textContent=pagos.filter(p=>p.fecha===h).length;
+  document.getElementById('s-pend').textContent=pagos.filter(p=>p.estado==='Pendiente').length;
+}
+function resumenP(){
+  const by={};pagos.forEach(p=>{if(!by[p.fecha])by[p.fecha]={bs:0,usd:0,tr:0,pm:0};by[p.fecha].bs+=p.monto;by[p.fecha].usd+=(p.usd||0);if(p.tipo==='Transferencia')by[p.fecha].tr++;else by[p.fecha].pm++});
+  const dates=Object.keys(by).sort((a,b)=>b.localeCompare(a)).slice(0,8);
+  const el=document.getElementById('resumen-p');
+  if(!dates.length){el.innerHTML='<p style="color:var(--gray-mid);font-size:14px">Sin pagos aún.</p>';return}
+  el.innerHTML=dates.map(d=>`<div class="res-card"><div class="res-date">${fmt(d)}</div>
+    <div class="res-row"><span>Transferencias</span><span>${by[d].tr}</span></div>
+    <div class="res-row"><span>Pago Móvil</span><span>${by[d].pm}</span></div>
+    <div class="res-row"><span>Total Bs</span><span style="color:var(--pink)">${fBs(by[d].bs)}</span></div>
+    <div class="res-row"><span>Total USD</span><span style="color:var(--blue)">${fUsd(by[d].usd)}</span></div></div>`).join('');
+}
+function exportarPagos(){
+  if(!pagos.length){toast('Sin pagos',false);return}
+  const txt='TENDENCIA AB — PAGOS\n'+'='.repeat(60)+'\n'+pagos.map(p=>`[${p.tipo}] ${fmt(p.fecha)} | ${p.cliente||'S/N'} | Ref:${p.ref} | ${p.banco||''} | ${fBs(p.monto)} | T:${Number(p.tasa).toFixed(2)} | ${fUsd(p.usd||0)} | ${p.estado}${p.nota?' | '+p.nota:''}`).join('\n')+'\n'+'='.repeat(60)+'\nTOTAL Bs: '+fBs(pagos.reduce((s,p)=>s+p.monto,0))+'\nTOTAL USD: '+fUsd(pagos.reduce((s,p)=>s+(p.usd||0),0));
+  navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));
+}
+
+/* INVENTARIO */
+function calcBsProd(){
+  const u=parseFloat(document.getElementById('i-pusd').value)||0,t=tasa||parseFloat(document.getElementById('f-tasa').value)||0,bs=u*t;
+  document.getElementById('i-pbs').value=(u&&t)?fBs(bs):'';
+  const pb=document.getElementById('prev-box');
+  if(u&&t){pb.style.display='flex';document.getElementById('prev-usd').textContent=fUsd(u);document.getElementById('prev-tasa').textContent=Number(t).toFixed(2);document.getElementById('prev-bs').textContent=fBs(bs)}else pb.style.display='none';
+}
+function chkStock(){const q=parseInt(document.getElementById('i-qty').value)||0,m=parseInt(document.getElementById('i-min').value)||5;document.getElementById('a-stock').classList.toggle('show',q>0&&q<=m)}
+function chkDupCod(v){
+  v=v.trim().toUpperCase();const d=document.getElementById('a-dup-cod'),o=document.getElementById('a-ok-cod'),b=document.getElementById('btn-inv');
+  if(!v){d.classList.remove('show');o.classList.remove('show');b.disabled=false;return}
+  const is=inv.some(p=>p.codigo===v);d.classList.toggle('show',is);o.classList.toggle('show',!is);b.disabled=is;
+}
+function agregarProd(){
+  const cod=document.getElementById('i-cod').value.trim().toUpperCase(),nom=document.getElementById('i-nom').value.trim(),
+    cat=document.getElementById('i-cat').value,pusd=parseFloat(document.getElementById('i-pusd').value)||0,
+    qty=parseInt(document.getElementById('i-qty').value)||0,min=parseInt(document.getElementById('i-min').value)||5,
+    prov=document.getElementById('i-prov').value.trim(),fecha=document.getElementById('i-fecha').value,
+    desc=document.getElementById('i-desc').value.trim(),t=tasa||parseFloat(document.getElementById('f-tasa').value)||0;
+  if(!cod){toast('Código obligatorio',false);return}
+  if(!nom){toast('Nombre obligatorio',false);return}
+  if(!pusd){toast('Precio USD obligatorio',false);return}
+  if(inv.some(p=>p.codigo===cod)){showModal('Código duplicado',`El código <span class="modal-ref">${cod}</span> ya existe en el inventario.`);return}
+  inv.unshift({id:Date.now(),codigo:cod,nombre:nom,categoria:cat,precioUsd:pusd,precioBs:pusd*t,tasa:t,cantidad:qty,minimo:min,proveedor:prov,fecha,desc});
+  localStorage.setItem(KI,JSON.stringify(inv));
+  ['i-cod','i-nom','i-pusd','i-pbs','i-qty','i-prov','i-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('i-min').value=5;
+  ['a-dup-cod','a-ok-cod','a-stock'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('prev-box').style.display='none';document.getElementById('btn-inv').disabled=false;
+  renderInv();statsInv();toast('Producto agregado');
+}
+function elimI(id){if(!confirm('¿Eliminar producto?'))return;inv=inv.filter(p=>p.id!==id);localStorage.setItem(KI,JSON.stringify(inv));renderInv();statsInv();toast('Eliminado')}
+function setITab(t,el){iTab=t;document.querySelectorAll('#page-inventario .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderInv()}
+function renderInv(){
+  const b=document.getElementById('buscar-inv').value.toLowerCase();
+  const hasLow=inv.some(p=>p.cantidad<=p.minimo);document.getElementById('tab-low').classList.toggle('flag-low',hasLow);
+  const t=tasa||0;
+  const items=inv.filter(p=>{const mt=iTab==='todos'||p.categoria===iTab||(iTab==='bajo'&&p.cantidad<=p.minimo);const mb=!b||p.codigo.toLowerCase().includes(b)||p.nombre.toLowerCase().includes(b);return mt&&mb});
+  const tb=document.getElementById('tbody-i');
+  if(!items.length){tb.innerHTML='<tr class="empty-row"><td colspan="13">Sin productos</td></tr>';return}
+  tb.innerHTML=items.map(p=>{
+    const isOut=p.cantidad===0,isLow=p.cantidad>0&&p.cantidad<=p.minimo;
+    const bsCur=t>0?fBs(p.precioUsd*t):fBs(p.precioBs);
+    const cBadge=p.categoria==='Cosmético'?'b-cosm':p.categoria==='Lencería'?'b-lenc':p.categoria==='Perfumería'?'b-perf':p.categoria==='Accesorio'?'b-acc':'b-otro';
+    const sBadge=isOut?'b-out':isLow?'b-low':'b-ok';const sTxt=isOut?'Agotado':isLow?'Stock bajo':'Disponible';
+    return`<tr${isLow||isOut?' class="warn-row"':''}>
+      <td class="ref-cell" style="font-weight:700">${p.codigo}</td>
+      <td style="font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.nombre}">${p.nombre}</td>
+      <td><span class="badge ${cBadge}">${p.categoria}</span></td>
+      <td style="font-weight:700;color:var(--blue)">${fUsd(p.precioUsd)}</td>
+      <td style="font-weight:700;color:var(--pink)">${bsCur}</td>
+      <td style="font-size:11px;color:var(--gray-mid)">${Number(t||p.tasa).toFixed(2)}</td>
+      <td style="font-weight:700;font-size:15px;color:${isOut?'var(--red)':isLow?'var(--gold)':'var(--green)'}">${p.cantidad}</td>
+      <td style="font-size:12px;color:var(--gray-mid)">${p.minimo}</td>
+      <td><span class="badge ${sBadge}">${sTxt}</span></td>
+      <td style="font-size:12px;color:var(--gray-mid);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.desc||''}">${p.desc||'—'}</td>
+      <td style="font-size:12px;color:var(--gray-mid)">${p.proveedor||'—'}</td>
+      <td style="font-size:12px;white-space:nowrap">${fmt(p.fecha)}</td>
+      <td><button class="del-btn" onclick="elimI(${p.id})">&#10005;</button></td>
+    </tr>`}).join('');
+}
+function statsInv(){
+  const t=tasa||0;
+  const vu=inv.reduce((s,p)=>s+(p.precioUsd*p.cantidad),0);
+  const vb=t>0?vu*t:inv.reduce((s,p)=>s+(p.precioBs*p.cantidad),0);
+  document.getElementById('i-tot').textContent=inv.length;
+  document.getElementById('i-uni').textContent=inv.reduce((s,p)=>s+p.cantidad,0);
+  document.getElementById('i-vusd').textContent=fUsd(vu);
+  document.getElementById('i-vbs').textContent=fBs(vb);
+  document.getElementById('i-bajo').textContent=inv.filter(p=>p.cantidad>0&&p.cantidad<=p.minimo).length;
+  document.getElementById('i-out').textContent=inv.filter(p=>p.cantidad===0).length;
+}
+function exportarInv(){
+  if(!inv.length){toast('Sin productos',false);return}
+  const txt='TENDENCIA AB — INVENTARIO\n'+'='.repeat(60)+'\n'+inv.map(p=>`[${p.codigo}] ${p.nombre} | ${p.categoria} | ${fUsd(p.precioUsd)} | ${fBs(p.precioBs)} | Stock:${p.cantidad} | Min:${p.minimo}${p.proveedor?' | '+p.proveedor:''}${p.desc?' | '+p.desc:''}`).join('\n')+'\n'+'='.repeat(60)+'\nTOTAL PRODUCTOS: '+inv.length+'\nTOTAL UNIDADES: '+inv.reduce((s,p)=>s+p.cantidad,0);
+  navigator.clipboard.writeText(txt).then(()=>toast('Inventario copiado'));
+}
+</script>
+</body>
 </html>
